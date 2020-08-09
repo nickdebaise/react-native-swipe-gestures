@@ -1,7 +1,7 @@
 "use strict";
 
 import React, { Component } from "react";
-import { View, PanResponder } from "react-native";
+import { View, PanResponder, Animated } from "react-native";
 
 export const swipeDirections = {
   SWIPE_UP: "SWIPE_UP",
@@ -28,6 +28,10 @@ function isValidSwipe(
   );
 }
 
+const mapStateToValue = x => {
+  return Math.sign(x) * Math.pow(Math.abs(x), 1 / 1.6);
+}
+
 class GestureRecognizer extends Component {
   constructor(props, context) {
     super(props, context);
@@ -38,6 +42,11 @@ class GestureRecognizer extends Component {
     this._panResponder = PanResponder.create({
       onStartShouldSetPanResponder: shouldSetResponder,
       onMoveShouldSetPanResponder: shouldSetResponder,
+      onPanResponderMove : (evt, gestureState) => {
+        if(this.props && this.props.value && this.props.value.setValue) {
+          this.props.value.setValue(mapStateToValue(gestureState.dx))
+        }
+      },
       onPanResponderRelease: responderEnd,
       onPanResponderTerminate: responderEnd
     });
@@ -64,6 +73,7 @@ class GestureRecognizer extends Component {
   }
 
   _handlePanResponderEnd(evt, gestureState) {
+    Animated.spring(this.props.value, {toValue : 0, duration : 70, useNativeDriver : true}).start()
     const swipeDirection = this._getSwipeDirection(gestureState);
     this._triggerSwipeHandlers(swipeDirection, gestureState);
   }
